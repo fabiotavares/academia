@@ -33,7 +33,7 @@ void main(List<String> args) {
   // Descobrindo os sobrenomes em runtime
   List<String> sobrenomesDistintos = [];
   for (String nome in pacientesNome) {
-    var sobrenome = nome.substring(nome.indexOf(' ') + 1, nome.length);
+    final sobrenome = nome.substring(nome.indexOf(' ') + 1, nome.length);
     if (!sobrenomesDistintos.contains(sobrenome)) {
       sobrenomesDistintos.add(sobrenome);
     }
