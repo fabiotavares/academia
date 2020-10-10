@@ -38,7 +38,7 @@ void main(List<String> args) {
       sobrenomesDistintos.add(sobrenome);
     }
   }
-
+  // montando relatório
   for (String sobrenome in sobrenomesDistintos) {
     final membros =
         pacientesNome.where((nome) => nome.contains(sobrenome)).toList();
