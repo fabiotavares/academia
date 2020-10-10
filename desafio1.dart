@@ -25,7 +25,7 @@ void main(List<String> args) {
     pacientesIdade.add(pacienteSplit[1]);
   }
 
-  // Resposta 1 (mais longa devido à checagem na conversão)
+  // Resposta 1
   final maiores20 = pacientesIdade.where((p) => int.parse(p) > 20);
   print('Total de pacientes com mais de 20 anos: ${maiores20.length}');
 
