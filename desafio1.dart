@@ -20,7 +20,7 @@ void main(List<String> args) {
   List<String> pacientesIdade = [];
 
   for (String paciente in pacientes) {
-    var pacienteSplit = paciente.split('|');
+    final pacienteSplit = paciente.split('|');
     pacientesNome.add(pacienteSplit[0]);
     pacientesIdade.add(pacienteSplit[1]);
   }
