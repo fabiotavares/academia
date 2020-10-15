@@ -15,43 +15,74 @@ class IbgeController {
     * Nenhum outro dado será considerado nesta implementação.
   */
 
-    // cria banco de dados novo para os municípios do Brasil
-    var db = MysqlDb();
     try {
       // preparando banco de dados
-      await db.createIbgeSchema();
+      print('Iniciando...');
+      await MysqlDb.createIbgeSchema();
+      print('Schema do banco de dados completado...');
 
-      // buscando lista de estados
-      var estados = await DioRestapi.fetchEstados();
-      if (estados == null) {
-        throw Exception('Erro ao buscar estados');
-      }
-      // criando lista de objetos de estado
-      var estadosModel = <EstadoModel>[];
-      estados.forEach((element) {
-        estadosModel.add(EstadoModel.fromMap(element));
-      });
+      // obtendo a lista de objetos Estados
+      print('Buscando lista de estados...');
+      final estadosModel = await _getEstadosModel();
+      print('Lista de estados concluída...');
+
       // cadastrando objetos estado no banco de dados
-      estadosModel.forEach((estado) async {
-        await db.cadastrarEstado(estado);
-        // buscar pelas cidades do estado
-        var cidades = await DioRestapi.fetchCidades(estado.id);
-        if (cidades == null) {
-          throw Exception('Erro ao buscar cidades do estado ${estado.id}');
-        } else {
-          // criando lista de objetos de cidade
-          var cidadesModel = <CidadeModel>[];
-          cidades.forEach((element) {
-            cidadesModel.add(CidadeModel.fromMap(estado.id, element));
-          });
-          // cadastrando objetos cidade no banco de dados
-          cidadesModel.forEach((cidade) async {
-            await db.cadastrarCidade(cidade);
-          });
-        }
+      print('Iniciando cadastramento dos estados...');
+      await Future.forEach(estadosModel, (estado) async {
+        final estadoModel = (estado as EstadoModel);
+        await MysqlDb.cadastrarEstado(estadoModel);
+        print('...${estadoModel.nome}');
+      });
+      print('Cadastro dos estados concluído...');
+
+      // para cada estado, buscar suas cidades e cadastrar no banco de dados
+      await Future.forEach(estadosModel, (estado) async {
+        final estadoModel = (estado as EstadoModel);
+
+        // buscar lista de cidades do respectivo estado
+        print('Iniciando busca de cidades do estado ${estadoModel.nome}...');
+        final cidadesModel = await _getCidadesModel(estadoModel.id);
+        print('Cidades localizadas...');
+
+        // cadastrando cidades para ao respectivo estado
+        print('Iniciando cadastramento das cidades de ${estadoModel.nome}');
+        await Future.forEach(cidadesModel, (cidade) async {
+          final cidadeModel = (cidade as CidadeModel);
+          await MysqlDb.cadastrarCidade(cidadeModel);
+          print('...${cidadeModel.nome}');
+        });
+        print('Processo finalizado com sucesso!');
       });
     } catch (e) {
       print('Erro inesperado: $e');
     }
+  }
+
+  static Future<List<EstadoModel>> _getEstadosModel() async {
+    // buscando lista de estados
+    var estados = await DioRestapi.fetchEstados();
+    if (estados == null) {
+      throw Exception('Erro ao buscar estados');
+    }
+    // criando lista de objetos de estado
+    var estadosModel = <EstadoModel>[];
+    estados.forEach((element) {
+      estadosModel.add(EstadoModel.fromMap(element));
+    });
+    return Future.value(estadosModel);
+  }
+
+  static Future<List<CidadeModel>> _getCidadesModel(int estadoId) async {
+    // buscando lista de cidades
+    var cidades = await DioRestapi.fetchCidades(estadoId);
+    if (cidades == null) {
+      throw Exception('Erro ao buscar cidades do estado $estadoId');
+    }
+    // criando lista de objetos de cidade
+    var cidadesModel = <CidadeModel>[];
+    cidades.forEach((cidade) {
+      cidadesModel.add(CidadeModel.fromMap(estadoId, cidade));
+    });
+    return Future.value(cidadesModel);
   }
 }

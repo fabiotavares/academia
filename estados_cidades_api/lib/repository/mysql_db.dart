@@ -4,9 +4,7 @@ import 'package:estados_cidades_api/utils/constants.dart';
 import 'package:mysql1/mysql1.dart';
 
 class MysqlDb {
-  MySqlConnection _conn;
-
-  Future<MySqlConnection> getConnection() async {
+  static Future<MySqlConnection> _getConnection() async {
     var settings = ConnectionSettings(
         host: 'localhost',
         port: 3306,
@@ -17,31 +15,27 @@ class MysqlDb {
     return await MySqlConnection.connect(settings);
   }
 
-  Future<void> createIbgeSchema() async {
+  static Future<void> createIbgeSchema() async {
+    var conn = await _getConnection();
     try {
       // apaga banco de dados se existir, para não gerar duplicidade
       // esta ordem não gera excessão devido às chaves extrangeiras
-      _conn = await getConnection();
       //await conn.query('USE desafio_dart_modulo7');
-      await _conn.query('DROP TABLE IF EXISTS cidade');
-      await _conn.query('DROP TABLE IF EXISTS estado');
-      await _conn.query('DROP TABLE IF EXISTS pais');
+      await conn.query('DROP TABLE IF EXISTS cidade');
+      await conn.query('DROP TABLE IF EXISTS estado');
+      await conn.query('DROP TABLE IF EXISTS pais');
 
       // cria a tabela pais
-      await _conn.query('''CREATE TABLE IF NOT EXISTS pais(
+      await conn.query('''CREATE TABLE IF NOT EXISTS pais(
       id INT PRIMARY KEY NOT NULL,
       nome VARCHAR(200) NOT NULL)''');
 
-      // cadastra Brasil se necessário
-      var brasil =
-          await _conn.query('SELECT * from pais WHERE nome=?', ['Brasil']);
-      if (brasil.isEmpty) {
-        await _conn.query('INSERT INTO pais (id, nome) values (?, ?);',
-            [BRASIL_ID, 'Brasil']);
-      }
+      // cadastra Brasil
+      await conn.query(
+          'INSERT INTO pais (id, nome) values (?, ?);', [BRASIL_ID, 'Brasil']);
 
       // cria tabela estado
-      await _conn.query('''CREATE TABLE IF NOT EXISTS estado(
+      await conn.query('''CREATE TABLE IF NOT EXISTS estado(
       id INT PRIMARY KEY NOT NULL,
       pais_id INT,
       nome VARCHAR(200) NOT NULL,
@@ -49,7 +43,7 @@ class MysqlDb {
       FOREIGN KEY (pais_id) REFERENCES pais(id))''');
 
       // cria tabela distrito
-      await _conn.query('''CREATE TABLE IF NOT EXISTS cidade(
+      await conn.query('''CREATE TABLE IF NOT EXISTS cidade(
       id INT PRIMARY KEY NOT NULL,
       estado_id INT,
       nome VARCHAR(200) NOT NULL,
@@ -58,35 +52,35 @@ class MysqlDb {
       print('Erro na criação do banco de dados: $e');
       throw Exception(e);
     } finally {
-      await _conn.close();
+      await conn.close();
     }
   }
 
-  Future<void> cadastrarEstado(EstadoModel estado) async {
+  static Future<void> cadastrarEstado(EstadoModel estado) async {
+    var conn = await _getConnection();
     try {
-      _conn = await getConnection();
-      await _conn.query(
+      await conn.query(
           'insert into estado (id, pais_id, sigla, nome) values (?, ?, ?, ?)',
           [estado.id, estado.paisId, estado.sigla, estado.nome]);
     } on Exception catch (e) {
       print('Erro no cadastro de estado: $e');
       throw Exception(e);
     } finally {
-      await _conn.close();
+      await conn.close();
     }
   }
 
-  Future<void> cadastrarCidade(CidadeModel cidade) async {
+  static Future<void> cadastrarCidade(CidadeModel cidade) async {
+    var conn = await _getConnection();
     try {
-      _conn = await getConnection();
-      await _conn.query(
+      await conn.query(
           'insert into cidade (id, estado_id, nome) values (?, ?, ?)',
           [cidade.id, cidade.estadoId, cidade.nome]);
     } on Exception catch (e) {
       print('Erro no cadastro de cidade: $e');
       throw Exception(e);
     } finally {
-      await _conn.close();
+      await conn.close();
     }
   }
 }
