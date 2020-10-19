@@ -31,8 +31,11 @@ class RevendaModel {
     );
   }
 
-  String get precoFormatado =>
+  String get precoFormatadoComCifrao =>
       'R\$ ' + preco.toStringAsFixed(2).replaceFirst('.', ',');
+
+  String get precoFormatadoSemCifrao =>
+      preco.toStringAsFixed(2).replaceFirst('.', ',');
 
   int get corFormatada => int.parse('0xFF' + cor);
 }

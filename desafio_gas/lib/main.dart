@@ -17,8 +17,16 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: HomePage(),
-      routes: {
-        PedidoPage.routeName: (_) => PedidoPage(),
+      onGenerateRoute: (settings) {
+        final route = settings.name;
+        Widget page;
+
+        if (route == PedidoPage.routeName) {
+          page = PedidoPage(revenda: settings.arguments);
+        }
+
+        return MaterialPageRoute(
+            builder: (context) => page, settings: settings);
       },
     );
   }
